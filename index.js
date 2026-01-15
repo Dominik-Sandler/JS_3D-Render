@@ -10,6 +10,15 @@ var ctx = canvas.getContext("2d");
 function vec2(x,y) {
     return{x,y}
 }
+function vec3(x,y,z) {
+    return{x,y,z}
+}
+function projection(x,y,z){
+    return {
+        x: x/z,
+        y: y/z
+    }
+}
 function initialze(width,height,color){
     canvas.width=width
     canvas.height=height
@@ -24,14 +33,24 @@ function centralize({x,y}){
         y: y + centery
     };
 }
-function render(pos){
-    var cpos = centralize(pos)
-    ctx.fillStyle = RENDER_COLOR;
-    ctx.fillRect(cpos.x,cpos.y,LINE_THICKNESS,LINE_THICKNESS)
+function render(poslist){
+    for(var i = 0; i < poslist.length; i++){
+        var pos = poslist[i]
+        var cpos = centralize(pos)
+        ctx.fillStyle = RENDER_COLOR;
+        ctx.fillRect(cpos.x,cpos.y,LINE_THICKNESS,LINE_THICKNESS)
+    }
+}
+function createRectangle(){
+    var pos0 = vec2(-100,-100)
+    var pos1 = vec2(100,-100)
+    var pos2 = vec2(100,100)
+    var po4 = vec2(-100,100)
+
+    return [pos0,pos1,pos2,po4]
 }
 
 
+initialze(CANVAS_WIDTH,CANVAS_HEIGHT,BG_COLOR) 
 
-initialze(CANVAS_WIDTH,CANVAS_HEIGHT,BG_COLOR)
-var pos = vec2(0,0)
-render(pos)
+render(createRectangle())
