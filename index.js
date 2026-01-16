@@ -47,7 +47,7 @@ function centralize({x,y}){
 
     return {
         x: x + centerx,
-        y: y + centery,
+        y: centery - y ,
     };
 }
 function render(poslist){
