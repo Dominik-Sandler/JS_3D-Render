@@ -104,26 +104,52 @@ function draw(poslist){
     for(var i = 0; i < poslist.length; i++){
         ctx.fillStyle = RENDER_COLOR;
         ctx.fillRect(poslist[i].x,poslist[i].y,LINE_THICKNESS,LINE_THICKNESS)
+    } 
+}
+function draw1(poslist, edgelist) {
+    ctx.strokeStyle = RENDER_COLOR;
+    ctx.lineWidth = LINE_THICKNESS / 5;
+    ctx.beginPath();
+
+    for (let i = 0; i < edgelist.length; i++) {
+        let edge = edgelist[i];
+        
+        let startPoint = poslist[edge.a];
+        let endPoint = poslist[edge.b];
+
+        ctx.moveTo(startPoint.x, startPoint.y);
+        ctx.lineTo(endPoint.x, endPoint.y);
     }
+
+    ctx.stroke();
 }
 function frame(){
-    DZ += 0.01
+    //DZ += 0.01
     ANGLE += 10*Math.PI * DELTATIME
     clear()
     var cube = createCubeV()
+    var cubeE = createCubeE()
     cube = rotateY(cube,ANGLE)
-    // cube = rotateX(cube,ANGLE)
-    // cube = rotateZ(cube,ANGLE)
+    //cube = rotateX(cube,ANGLE)
+    //cube = rotateZ(cube,ANGLE)
     cube = translateZ(cube,DZ)
-    draw(render(cube))
+    draw1(render(cube),cubeE)
     requestAnimationFrame(frame);
 }
 function createCubeV(){
     return [
-        vec3(0.5, 0.5, 0.5), vec3(-0.5, 0.5, 0.5), 
-        vec3(0.5, -0.5, 0.5),   vec3(-0.5, -0.5, 0.5),
-        vec3(0.5, 0.5, -0.5), vec3(-0.5, 0.5, -0.5), 
-        vec3(0.5, -0.5, -0.5),   vec3(-0.5, -0.5, -0.5)
+        vec3(-0.5, 0.5, 0.5),vec3(0.5, 0.5, 0.5),
+        vec3(0.5, -0.5, 0.5),vec3(-0.5, -0.5, 0.5),
+        vec3(-0.5, 0.5, -0.5),vec3(0.5, 0.5, -0.5),
+        vec3(0.5, -0.5, -0.5),vec3(-0.5, -0.5, -0.5)
+    ];
+}
+
+function createCubeE(){
+    return [
+        {a:0, b:1}, {a:1, b:2}, {a:2, b:3}, {a:3, b:0},
+        {a:4, b:5}, {a:5, b:6}, {a:6, b:7}, {a:7, b:4},
+        {a:0, b:4}, {a:1, b:5}, {a:2, b:6}, {a:3, b:7} 
     ];
 }
 
