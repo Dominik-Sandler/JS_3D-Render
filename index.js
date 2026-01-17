@@ -3,8 +3,11 @@ CANVAS_HEIGHT = "800"
 BG_COLOR = "background-color:000000" 
 RENDER_COLOR = "green"
 LINE_THICKNESS = 10
-DISTANCE = 10
+DISTANCE = 400
 DEG2RAD = Math.PI/180
+FPS = 60
+DELTATIME = 1/FPS
+DZ = 0
 
 
 var ctx = canvas.getContext("2d");
@@ -16,11 +19,17 @@ function vec3(x,y,z) {
     return{x,y,z}
 }
 function projection(x,y,z){
-    var factor = DISTANCE/(DISTANCE + z)
     return {
-        x: x/z * factor,
-        y: y/z * factor
+        x: (x * DISTANCE)/z,
+        y: (y * DISTANCE)/z
     }
+}
+function translateZ(poslist,dz){
+    for(var i = 0; i < poslist.length; i++){
+        poslist[i].z += dz
+    }
+    return poslist
+
 }
 function rotateY(poslist,angle){
     rad = angle * DEG2RAD
@@ -66,16 +75,23 @@ function draw(poslist){
         ctx.fillRect(poslist[i].x,poslist[i].y,LINE_THICKNESS,LINE_THICKNESS)
     }
 }
+function frame(){
+    DZ += 1
+    clear()
+    var cube = createCubeV()
+    cube = translateZ(cube,DZ)
+    draw(render(cube))
+    requestAnimationFrame(frame);
+}
 function createCubeV(){
-    var pos0 = vec3(-100,-100,1)
-    var pos1 = vec3(100,-100,1)
-    var pos2 = vec3(100,100,1)
-    var pos3 = vec3(-100,100,1)
-
-    var pos4 = vec3(-100,-100,2)
-    var pos5 = vec3(100,-100,2)
-    var pos6 = vec3(100,100,2)
-    var pos7 = vec3(-100,100,2)
+    var pos0 = vec3(-50, -50, 0)
+    var pos1 = vec3(50,-50,0)
+    var pos2 = vec3(50,50,0)
+    var pos3 = vec3(-50,50,0)
+    var pos4 = vec3(-50,-50,200)
+    var pos5 = vec3(50,-50,200)
+    var pos6 = vec3(50,50,200)
+    var pos7 = vec3(-50,50,200)
 
     return [pos0,pos1,pos2,pos3,pos4,pos5,pos6,pos7]
 }
@@ -83,4 +99,4 @@ function createCubeV(){
 
 initialze(CANVAS_WIDTH,CANVAS_HEIGHT,BG_COLOR) 
 
-draw(render(rotateY(createCubeV(),10)))
+frame()
