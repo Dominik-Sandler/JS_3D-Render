@@ -6,6 +6,9 @@ LINE_THICKNESS = 10
 FOCAL_LENGTH = 1.5
 DEG2RAD = Math.PI/180
 DZ = 2
+FPS = 60
+DELTATIME = 1/60
+ANGLE = 0
 
 
 var ctx = canvas.getContext("2d");
@@ -40,11 +43,43 @@ function rotateY(poslist,angle){
     rad = angle * DEG2RAD
     var cos = Math.cos(rad);
     var sin = Math.sin(rad);
+    newlist = []
 
     for(var i = 0; i < poslist.length; i++){
-        
+        var p = poslist[i];
+        x = p.x * cos - p.z * sin;
+        z = p.z * cos + p.x * sin;
+        newlist[i] = {x: x,y: p.y,z:z}
     }
-    return poslist
+    return newlist
+}
+function rotateX(poslist,angle){
+    rad = angle * DEG2RAD
+    var cos = Math.cos(rad);
+    var sin = Math.sin(rad);
+    newlist = []
+
+    for(var i = 0; i < poslist.length; i++){
+        var p = poslist[i];
+        y = p.y * cos - p.z * sin;
+        z = p.z * cos + p.y * sin;
+        newlist[i] = {x: p.x,y: y,z: z}
+    }
+    return newlist
+}
+function rotateZ(poslist, angle) {
+    var rad = angle * DEG2RAD;
+    var cos = Math.cos(rad);
+    var sin = Math.sin(rad);
+    var newlist = [];
+
+    for (var i = 0; i < poslist.length; i++) {
+        var p = poslist[i];
+        var x = p.x * cos - p.y * sin;
+        var y = p.x * sin + p.y * cos;
+        newlist[i] = { x: x, y: y, z: p.z };
+    }
+    return newlist;
 }
 function initialze(width,height,color){
     canvas.width=width
@@ -73,8 +108,12 @@ function draw(poslist){
 }
 function frame(){
     DZ += 0.01
+    ANGLE += 10*Math.PI * DELTATIME
     clear()
     var cube = createCubeV()
+    cube = rotateY(cube,ANGLE)
+    // cube = rotateX(cube,ANGLE)
+    // cube = rotateZ(cube,ANGLE)
     cube = translateZ(cube,DZ)
     draw(render(cube))
     requestAnimationFrame(frame);
