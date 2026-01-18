@@ -119,6 +119,26 @@ function draw1(poslist, edgelist) {
     }
 
     ctx.stroke();
+    drawFrame(poslist,edgelist)
+}
+function drawFrame(poslist,edgelist){
+    
+    ctx.fillStyle = "#FFFFFF"
+    ctx.beginPath();
+    ctx.moveTo(poslist[0].x,poslist[0].y)
+    ctx.lineTo(poslist[1].x,poslist[1].y)
+    ctx.lineTo(poslist[2].x,poslist[2].y)
+    ctx.lineTo(poslist[3].x,poslist[3].y)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = "#FF0000"
+    ctx.beginPath();
+    ctx.moveTo(poslist[1].x,poslist[1].y)
+    ctx.lineTo(poslist[2].x,poslist[2].y)
+    ctx.lineTo(poslist[6].x,poslist[6].y)
+    ctx.lineTo(poslist[5].x,poslist[5].y)
+    ctx.closePath()
+    ctx.fill()
 }
 function frame(){
     //DZ += 0.01
