@@ -1,2 +1,2 @@
 # JS_3D-Render
-Selfmade JS Wireframerender using html canvas
+Selfmade JS 3D Render using html canvas
