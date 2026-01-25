@@ -29,12 +29,12 @@ function centralize({x,y}){
         y: (1 - y)/2 * CANVAS_HEIGHT - LINE_THICKNESS/2
     };
 }
-function translateZ(poslist,dz){
-    for(var i = 0; i < poslist.length; i++){
-        poslist[i].z += dz
-    }
-    return poslist
-
+function translate(poslist, dx, dy, dz){
+  return poslist.map(p => ({
+    x: p.x + dx,
+    y: p.y + dy,
+    z: p.z + dz
+  }));
 }
 function rotateY(poslist,angle){
     rad = angle * DEG2RAD
@@ -97,61 +97,38 @@ function render(poslist){
     }
     return newlist
 }
-function draw(poslist){
-    for(var i = 0; i < poslist.length; i++){
-        ctx.fillStyle = RENDER_COLOR;
-        ctx.fillRect(poslist[i].x,poslist[i].y,LINE_THICKNESS,LINE_THICKNESS)
-    }
-}
-function draw1(poslist, edgelist) {
-    ctx.strokeStyle = RENDER_COLOR;
-    ctx.lineWidth = LINE_THICKNESS / 5;
+function drawFaces(projectedVerts, faces) {
+  ctx.strokeStyle = RENDER_COLOR;
+  ctx.lineWidth = 2;
+
+  for (let face of faces) {
     ctx.beginPath();
 
-    for (let i = 0; i < edgelist.length; i++) {
-        let edge = edgelist[i];
-        
-        let startPoint = poslist[edge.a];
-        let endPoint = poslist[edge.b];
+    let p0 = projectedVerts[face[0]];
+    ctx.moveTo(p0.x, p0.y);
 
-        ctx.moveTo(startPoint.x, startPoint.y);
-        ctx.lineTo(endPoint.x, endPoint.y);
+    for (let i = 1; i < face.length; i++) {
+      let p = projectedVerts[face[i]];
+      ctx.lineTo(p.x, p.y);
     }
 
+    ctx.closePath();
     ctx.stroke();
-    drawFrame(poslist,edgelist)
-}
-function drawFrame(poslist,edgelist){
-    
-    ctx.fillStyle = "#FFFFFF"
-    ctx.beginPath();
-    ctx.moveTo(poslist[0].x,poslist[0].y)
-    ctx.lineTo(poslist[1].x,poslist[1].y)
-    ctx.lineTo(poslist[2].x,poslist[2].y)
-    ctx.lineTo(poslist[3].x,poslist[3].y)
-    ctx.closePath()
-    ctx.fill()
-    ctx.fillStyle = "#FF0000"
-    ctx.beginPath();
-    ctx.moveTo(poslist[1].x,poslist[1].y)
-    ctx.lineTo(poslist[2].x,poslist[2].y)
-    ctx.lineTo(poslist[6].x,poslist[6].y)
-    ctx.lineTo(poslist[5].x,poslist[5].y)
-    ctx.closePath()
-    ctx.fill()
+  }
 }
 function frame(){
     //DZ += 0.01
     ANGLE += 10*Math.PI * DELTATIME
     clear()
-    var cube = createCubeV()
-    var cubeE = createCubeE()
-    cube = rotateY(cube,ANGLE)
-    //cube = rotateX(cube,ANGLE)
-    //cube = rotateZ(cube,ANGLE)
-    cube = translateZ(cube,DZ)
-    draw1(render(cube),cubeE)
-    requestAnimationFrame(frame);
+    const cube = new Mesh(createCubeV(), createCubeF());
+    let verts = cube.vertices;
+    verts = rotateX(verts,ANGLE -30);
+    verts = translate(verts, 0, 0, DZ);
+
+    let projected = render(verts);
+    drawFaces(projected, cube.faces);
+
+    //requestAnimationFrame(frame);
 }
 
 initialze(CANVAS_WIDTH,CANVAS_HEIGHT,BG_COLOR) 
