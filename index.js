@@ -50,6 +50,13 @@ function isFaceVisible(face, verts) {
 
   return dot(normal, viewDir) < 0;
 }
+function getFaceDepth(face, verts) {
+  let z = 0;
+  for (let idx of face) {
+    z += verts[idx].z;
+  }
+  return z / face.length;
+}
 function projection(x,y,z){
     return {
         x: (x * FOCAL_LENGTH)/z,
@@ -135,22 +142,28 @@ function drawFaces(projectedVerts, faces, worldVerts,colorlist) {
   ctx.strokeStyle = RENDER_COLOR;
   ctx.lineWidth = 2;
   let i = 0;
+  const faceOrder = faces.map((face, index) => ({
+    face,
+    index,
+    depth: getFaceDepth(face, worldVerts)
+  }))
+  .sort((a, b) => b.depth - a.depth);
 
-  for (let face of faces) {
-    i++
-    if (!isFaceVisible(face, worldVerts) && CULLING) continue;
+
+  for (let f of faceOrder) {
+    if (!isFaceVisible(f.face, worldVerts) && CULLING) continue;
+    ctx.fillStyle = colorlist[f.index];
     ctx.beginPath();
 
-    let p0 = projectedVerts[face[0]];
+    let p0 = projectedVerts[f.face[0]];
     ctx.moveTo(p0.x, p0.y);
 
-    for (let i = 1; i < face.length; i++) {
-      let p = projectedVerts[face[i]];
+    for (let i = 1; i < f.face.length; i++) {
+      let p = projectedVerts[f.face[i]];
       ctx.lineTo(p.x, p.y);
     }
 
     ctx.closePath();
-    ctx.fillStyle = colorlist[i]
     ctx.fill()
     ctx.stroke();
   }
@@ -162,6 +175,7 @@ function frame(){
     const cube = new Mesh(createCubeV(), createCubeF());
     var colorlist = ["#FFFFFF","#FF0000","#00FF00","#0000FF","#FFFF00","#00FFFF"]
     let verts = cube.vertices;
+    verts = rotateX(verts,ANGLE -30);
     verts = rotateY(verts,ANGLE -30);
     verts = translate(verts, 0, 0, DZ);
 
