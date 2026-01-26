@@ -10,7 +10,7 @@ FPS = 60
 DELTATIME = 1/60
 ANGLE = 0
 CULLING = true 
-CAMERA = vec3(0,0,0)
+CAMERA = new Camera()
 
 
 var ctx = canvas.getContext("2d");
@@ -46,7 +46,7 @@ function faceNormal(face, verts) {
 function isFaceVisible(face, verts) {
   const normal = faceNormal(face, verts);
   const v0 = verts[face[0]];
-  const viewDir = sub(v0, CAMERA);
+  const viewDir = sub(v0, CAMERA.position);
 
   return dot(normal, viewDir) < 0;
 }
