@@ -9,12 +9,46 @@ DZ = 2
 FPS = 60
 DELTATIME = 1/60
 ANGLE = 0
+CULLING = true 
+CAMERA = vec3(0,0,0)
 
 
 var ctx = canvas.getContext("2d");
 
 function vec3(x,y,z) {
     return{x,y,z}
+}
+function sub(a, b) {
+  return vec3(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+function cross(a, b) {
+  return vec3(
+    a.y * b.z - a.z * b.y,
+    a.z * b.x - a.x * b.z,
+    a.x * b.y - a.y * b.x
+  );
+}
+
+function dot(a, b) {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+function faceNormal(face, verts) {
+  const v0 = verts[face[0]];
+  const v1 = verts[face[1]];
+  const v2 = verts[face[2]];
+
+  const e1 = sub(v1, v0);
+  const e2 = sub(v2, v0);
+
+  return cross(e1, e2);
+}
+function isFaceVisible(face, verts) {
+  const normal = faceNormal(face, verts);
+  const v0 = verts[face[0]];
+  const viewDir = sub(v0, CAMERA);
+
+  return dot(normal, viewDir) < 0;
 }
 function projection(x,y,z){
     return {
@@ -97,11 +131,12 @@ function render(poslist){
     }
     return newlist
 }
-function drawFaces(projectedVerts, faces) {
+function drawFaces(projectedVerts, faces, worldVerts) {
   ctx.strokeStyle = RENDER_COLOR;
   ctx.lineWidth = 2;
 
   for (let face of faces) {
+    if (!isFaceVisible(face, worldVerts) && CULLING) continue;
     ctx.beginPath();
 
     let p0 = projectedVerts[face[0]];
@@ -122,13 +157,13 @@ function frame(){
     clear()
     const cube = new Mesh(createCubeV(), createCubeF());
     let verts = cube.vertices;
-    verts = rotateX(verts,ANGLE -30);
+    verts = rotateY(verts,ANGLE -30);
     verts = translate(verts, 0, 0, DZ);
 
     let projected = render(verts);
-    drawFaces(projected, cube.faces);
+    drawFaces(projected, cube.faces,verts);
 
-    //requestAnimationFrame(frame);
+    requestAnimationFrame(frame);
 }
 
 initialze(CANVAS_WIDTH,CANVAS_HEIGHT,BG_COLOR) 
