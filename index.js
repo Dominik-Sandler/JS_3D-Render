@@ -131,11 +131,13 @@ function render(poslist){
     }
     return newlist
 }
-function drawFaces(projectedVerts, faces, worldVerts) {
+function drawFaces(projectedVerts, faces, worldVerts,colorlist) {
   ctx.strokeStyle = RENDER_COLOR;
   ctx.lineWidth = 2;
+  let i = 0;
 
   for (let face of faces) {
+    i++
     if (!isFaceVisible(face, worldVerts) && CULLING) continue;
     ctx.beginPath();
 
@@ -148,6 +150,8 @@ function drawFaces(projectedVerts, faces, worldVerts) {
     }
 
     ctx.closePath();
+    ctx.fillStyle = colorlist[i]
+    ctx.fill()
     ctx.stroke();
   }
 }
@@ -156,12 +160,13 @@ function frame(){
     ANGLE += 10*Math.PI * DELTATIME
     clear()
     const cube = new Mesh(createCubeV(), createCubeF());
+    var colorlist = ["#FFFFFF","#FF0000","#00FF00","#0000FF","#FFFF00","#00FFFF"]
     let verts = cube.vertices;
     verts = rotateY(verts,ANGLE -30);
     verts = translate(verts, 0, 0, DZ);
 
     let projected = render(verts);
-    drawFaces(projected, cube.faces,verts);
+    drawFaces(projected, cube.faces,verts,colorlist);
 
     requestAnimationFrame(frame);
 }
