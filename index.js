@@ -174,6 +174,7 @@ function frame(){
     clear()
     const cube = new Mesh(createCubeV(), createCubeF());
     var colorlist = ["#FFFFFF","#FF0000","#00FF00","#0000FF","#FFFF00","#00FFFF"]
+    var dirt_images = createDirtImage();
     let verts = cube.vertices;
     verts = rotateX(verts,ANGLE -30);
     verts = rotateY(verts,ANGLE -30);

@@ -16,6 +16,17 @@ function createCubeF(){
         [3,2,6,7]
     ]
 }
+function createDirtImage(){
+    const img_top = new Image()
+    img_top.src = "Shape_Textures/Grassblock_Top.png"
+    const img_side = new Image()
+    img_side.src = "Shape_Textures/Grassblock_Side.png"
+    const img_bottom = new Image()
+    img_bottom.src = "Shape_Textures/Grassblock_Bottom.png"
+    return[
+        img_side,img_side,img_side,img_side,img_top,img_bottom
+    ]
+}
 
 // function createDonutV(majorRadius = 0.6, minorRadius = 0.2) {
 //     let vertices = [];
