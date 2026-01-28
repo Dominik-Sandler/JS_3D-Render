@@ -10,7 +10,10 @@ FPS = 60
 DELTATIME = 1/60
 ANGLE = 0
 CULLING = true 
-CAMERA = new Camera()
+const CAMERA = new Camera()
+CAMERA.position.z = 0;
+const MATERIAL = new Material("#0000FF");
+
 
 
 var ctx = canvas.getContext("2d");
@@ -32,6 +35,12 @@ function cross(a, b) {
 
 function dot(a, b) {
   return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+function quadToTris([a,b,c,d]) {
+  return [
+    [a,b,c],
+    [a,c,d]
+  ];
 }
 function faceNormal(face, verts) {
   const v0 = verts[face[0]];
@@ -57,18 +66,16 @@ function getFaceDepth(face, verts) {
   }
   return z / face.length;
 }
-function projection(x,y,z){
-    return {
-        x: (x * FOCAL_LENGTH)/z,
-        y: (y * FOCAL_LENGTH)/z
-    }
-}
-function centralize({x,y}){
+function projectVerts(verts) {
+  return verts.map(p => {
+    const x = (p.x * FOCAL_LENGTH) / p.z;
+    const y = (p.y * FOCAL_LENGTH) / p.z;
 
     return {
-        x: (x + 1)/2 * CANVAS_WIDTH - LINE_THICKNESS/2,
-        y: (1 - y)/2 * CANVAS_HEIGHT - LINE_THICKNESS/2
+      x: (x + 1)/2 * CANVAS_WIDTH,
+      y: (1 - y)/2 * CANVAS_HEIGHT
     };
+  });
 }
 function translate(poslist, dx, dy, dz){
   return poslist.map(p => ({
@@ -76,6 +83,36 @@ function translate(poslist, dx, dy, dz){
     y: p.y + dy,
     z: p.z + dz
   }));
+}
+function meshToWorld(mesh) {
+  let v = mesh.vertices;
+
+  v = rotateX(v, mesh.rotation.x);
+  v = rotateY(v, mesh.rotation.y);
+  v = rotateZ(v, mesh.rotation.z);
+
+  v = translate(
+    v,
+    mesh.position.x,
+    mesh.position.y,
+    mesh.position.z
+  );
+
+  return v;
+}
+
+function worldToView(verts, camera) {
+  let v = translate(verts,
+    -camera.position.x,
+    -camera.position.y,
+    -camera.position.z
+  );
+
+  v = rotateY(v, -camera.rotation.y);
+  v = rotateX(v, -camera.rotation.x);
+  v = rotateZ(v, -camera.rotation.z);
+
+  return v;
 }
 function rotateY(poslist,angle){
     rad = angle * DEG2RAD
@@ -128,62 +165,55 @@ function clear(){
     ctx.fillStyle = BG_COLOR
     ctx.clearRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT)
 }
-function render(poslist){
-    newlist = []
-    for(var i = 0; i < poslist.length; i++){
-        var pos = poslist[i]
-        var ppos = projection(pos.x,pos.y,pos.z)
-        var cpos = centralize(ppos)
-        newlist[i] = cpos
-    }
-    return newlist
-}
-function drawFaces(projectedVerts, faces, worldVerts,colorlist) {
-  ctx.strokeStyle = RENDER_COLOR;
-  ctx.lineWidth = 2;
-  let i = 0;
-  const faceOrder = faces.map((face, index) => ({
-    face,
-    index,
-    depth: getFaceDepth(face, worldVerts)
-  }))
-  .sort((a, b) => b.depth - a.depth);
+function renderMesh(mesh, camera) {
 
+  const worldVerts = meshToWorld(mesh);
+  const viewVerts = worldToView(worldVerts, camera);
+  const projected = projectVerts(viewVerts);
+  let faces = mesh.triangles.map(tri => ({
+    tri,
+    depth: getFaceDepth(tri, viewVerts)
+  }));
 
-  for (let f of faceOrder) {
-    if (!isFaceVisible(f.face, worldVerts) && CULLING) continue;
-    ctx.fillStyle = colorlist[f.index];
-    ctx.beginPath();
+  if (CULLING) {
+    faces = faces.filter(f =>
+      isFaceVisible(f.tri, viewVerts, camera)
+    );
+  }
 
-    let p0 = projectedVerts[f.face[0]];
-    ctx.moveTo(p0.x, p0.y);
-
-    for (let i = 1; i < f.face.length; i++) {
-      let p = projectedVerts[f.face[i]];
-      ctx.lineTo(p.x, p.y);
-    }
-
-    ctx.closePath();
-    ctx.fill()
-    ctx.stroke();
+  faces.sort((a,b)=>b.depth-a.depth);
+  
+  for (let f of faces) {
+    drawTriangle(projected, f.tri, mesh.material);
   }
 }
-function frame(){
-    //DZ += 0.01
-    ANGLE += 10*Math.PI * DELTATIME
-    clear()
-    const cube = new Mesh(createCubeV(), createCubeF());
-    var colorlist = ["#FFFFFF","#FF0000","#00FF00","#0000FF","#FFFF00","#00FFFF"]
-    let verts = cube.vertices;
-    verts = rotateX(verts,ANGLE -30);
-    verts = rotateY(verts,ANGLE -30);
-    verts = translate(verts, 0, 0, DZ);
 
-    let projected = render(verts);
-    drawFaces(projected, cube.faces,verts,colorlist);
+function drawTriangle(projected, tri, material) {
+  ctx.beginPath();
+  const p0 = projected[tri[0]];
+  ctx.moveTo(p0.x, p0.y);
 
-    requestAnimationFrame(frame);
+  for (let i=1;i<3;i++){
+    const p = projected[tri[i]];
+    ctx.lineTo(p.x, p.y);
+  }
+
+  ctx.closePath();
+  ctx.fillStyle = material.color;
+  ctx.fill();
+  ctx.stroke();
+}
+function frame() {
+  clear();
+
+  cube.rotation.y += 0.5;
+  cube.rotation.x += 0.5;
+
+  renderMesh(cube, CAMERA);
+  requestAnimationFrame(frame);
 }
 
+const cube = new Mesh(createCubeV(),createCubeF(),MATERIAL);
+cube.position.z = 3;
 initialze(CANVAS_WIDTH,CANVAS_HEIGHT,BG_COLOR) 
 frame()
