@@ -10,14 +10,19 @@ FPS = 60
 DELTATIME = 1/60
 ANGLE = 0
 CULLING = true 
-const CAMERA = new Camera()
-CAMERA.position.z = 0;
-const MATERIAL = new Material("#0000FF");
 
 
 
 var ctx = canvas.getContext("2d");
-
+function initialze(width,height,color){
+    canvas.width=width
+    canvas.height=height
+    canvas.style=color 
+}
+function clear(){
+    ctx.fillStyle = BG_COLOR
+    ctx.clearRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT)
+}
 function vec3(x,y,z) {
     return{x,y,z}
 }
@@ -77,13 +82,6 @@ function projectVerts(verts) {
     };
   });
 }
-function translate(poslist, dx, dy, dz){
-  return poslist.map(p => ({
-    x: p.x + dx,
-    y: p.y + dy,
-    z: p.z + dz
-  }));
-}
 function meshToWorld(mesh) {
   let v = mesh.vertices;
 
@@ -100,7 +98,6 @@ function meshToWorld(mesh) {
 
   return v;
 }
-
 function worldToView(verts, camera) {
   let v = translate(verts,
     -camera.position.x,
@@ -113,6 +110,13 @@ function worldToView(verts, camera) {
   v = rotateZ(v, -camera.rotation.z);
 
   return v;
+}
+function translate(poslist, dx, dy, dz){
+  return poslist.map(p => ({
+    x: p.x + dx,
+    y: p.y + dy,
+    z: p.z + dz
+  }));
 }
 function rotateY(poslist,angle){
     rad = angle * DEG2RAD
@@ -156,14 +160,11 @@ function rotateZ(poslist, angle) {
     }
     return newlist;
 }
-function initialze(width,height,color){
-    canvas.width=width
-    canvas.height=height
-    canvas.style=color 
-}
-function clear(){
-    ctx.fillStyle = BG_COLOR
-    ctx.clearRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT)
+function calculateLight(color,light){
+    let r = (Math.floor(parseInt(color.slice(1,3),16) * light)).toString(16)
+    let g = (Math.floor(parseInt(color.slice(3,5),16) * light)).toString(16)
+    let b = (Math.floor(parseInt(color.slice(5,7),16) * light)).toString(16)
+    return "#"+r+g+b
 }
 function renderMesh(mesh, camera) {
 
@@ -199,7 +200,7 @@ function drawTriangle(projected, tri, material) {
   }
 
   ctx.closePath();
-  ctx.fillStyle = material.color;
+  ctx.fillStyle = calculateLight(material.color,AMBIENTLIGHT.ambientLightStrength);
   ctx.fill();
   ctx.stroke();
 }
@@ -212,8 +213,14 @@ function frame() {
   renderMesh(cube, CAMERA);
   requestAnimationFrame(frame);
 }
-
+const CAMERA = new Camera();
+CAMERA.position.z = 0;
+const MATERIAL = new Material("#0000FF");
+const AMBIENTLIGHT = new AmbientLight(1);
+CAMERA.position.z = -3;
+// CAMERA.position.x = 1
+// CAMERA.position.y = 1
+// CAMERA.rotation.y = 15 
 const cube = new Mesh(createCubeV(),createCubeF(),MATERIAL);
-cube.position.z = 3;
 initialze(CANVAS_WIDTH,CANVAS_HEIGHT,BG_COLOR) 
 frame()
