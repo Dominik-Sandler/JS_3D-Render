@@ -11,6 +11,17 @@ DELTATIME = 1/60
 ANGLE = 0
 CULLING = true 
 
+RIGHTPRESSED = false;
+LEFTPRESSED = false;
+UPPRESSED = false;
+DOWNPRESSED = false;
+FRONTPRESSED = false;
+BACKPRESSED = false;
+
+MOUSEDOWN = false;
+MOUSEX = 0;
+MOUSEY = 0;
+MOUSE_SENSITIVITY = 0.15;
 
 
 var ctx = canvas.getContext("2d");
@@ -71,10 +82,18 @@ function getFaceDepth(face, verts) {
   }
   return z / face.length;
 }
+function isTriangleInFront(tri, verts) {
+  return (
+    verts[tri[0]].z > 0 &&
+    verts[tri[1]].z > 0 &&
+    verts[tri[2]].z > 0
+  );
+}
 function projectVerts(verts) {
   return verts.map(p => {
-    const x = (p.x * FOCAL_LENGTH) / p.z;
-    const y = (p.y * FOCAL_LENGTH) / p.z;
+    const z = Math.max(p.z, 0.0001);
+    const x = (p.x * FOCAL_LENGTH) / z;
+    const y = (p.y * FOCAL_LENGTH) / z;
 
     return {
       x: (x + 1)/2 * CANVAS_WIDTH,
@@ -171,7 +190,9 @@ function renderMesh(mesh, camera) {
   const worldVerts = meshToWorld(mesh);
   const viewVerts = worldToView(worldVerts, camera);
   const projected = projectVerts(viewVerts);
-  let faces = mesh.triangles.map(tri => ({
+  let faces = mesh.triangles
+  .filter(tri => isTriangleInFront(tri, viewVerts))
+  .map(tri => ({
     tri,
     depth: getFaceDepth(tri, viewVerts)
   }));
@@ -204,13 +225,78 @@ function drawTriangle(projected, tri, material) {
   ctx.fill();
   ctx.stroke();
 }
+function keyDownHandler(event) {
+  if (event.code === "KeyD") {
+    RIGHTPRESSED = true;
+  } else if (event.code === "KeyA") {
+    LEFTPRESSED = true;
+  } else if (event.code === "ShiftLeft") {
+    DOWNPRESSED = true;
+  } else if (event.code === "Space") {
+    UPPRESSED = true;
+  } else if (event.code === "KeyW") {
+    FRONTPRESSED = true;
+  } else if (event.code === "KeyS") {
+    BACKPRESSED = true;
+  }
+}
+
+function keyUpHandler(event) {
+  if (event.code === "KeyD") {
+    RIGHTPRESSED = false;
+  } else if (event.code === "KeyA") {
+    LEFTPRESSED = false;
+  } else if (event.code === "ShiftLeft") {
+    DOWNPRESSED = false;
+  } else if (event.code === "Space") {
+    UPPRESSED = false;
+  } else if (event.code === "KeyW") {
+    FRONTPRESSED = false;
+  } else if (event.code === "KeyS") {
+    BACKPRESSED = false;
+  }
+}
+function checkEvent() {
+  const speed = 0.05;
+
+  const yawRad = CAMERA.rotation.y * DEG2RAD;
+
+  const forward = {
+    x: Math.sin(yawRad),
+    z: Math.cos(yawRad)
+  };
+
+  const right = {
+    x: Math.cos(yawRad),
+    z: -Math.sin(yawRad)
+  };
+
+  if (FRONTPRESSED) {
+    CAMERA.position.x += forward.x * speed;
+    CAMERA.position.z += forward.z * speed;
+  }
+  if (BACKPRESSED) {
+    CAMERA.position.x -= forward.x * speed;
+    CAMERA.position.z -= forward.z * speed;
+  }
+  if (RIGHTPRESSED) {
+    CAMERA.position.x += right.x * speed;
+    CAMERA.position.z += right.z * speed;
+  }
+  if (LEFTPRESSED) {
+    CAMERA.position.x -= right.x * speed;
+    CAMERA.position.z -= right.z * speed;
+  }
+  if (UPPRESSED) CAMERA.position.y += speed;
+  if (DOWNPRESSED) CAMERA.position.y -= speed;
+}
+
 function frame() {
   clear();
-
-  cube.rotation.y += 0.5;
-  cube.rotation.x += 0.5;
-
+  //cube.rotation.y += 0.5;
+  //cube.rotation.x += 0.5;
   renderMesh(cube, CAMERA);
+  checkEvent();
   requestAnimationFrame(frame);
 }
 const CAMERA = new Camera();
@@ -220,7 +306,30 @@ const AMBIENTLIGHT = new AmbientLight(1);
 CAMERA.position.z = -3;
 // CAMERA.position.x = 1
 // CAMERA.position.y = 1
-// CAMERA.rotation.y = 15 
+// CAMERA.rotation.y = 15
+document.addEventListener("keydown", keyDownHandler);
+document.addEventListener("keyup", keyUpHandler);
+canvas.addEventListener("mousedown", (e) => {
+  MOUSEDOWN = true;
+  MOUSEX = e.clientX;
+  MOUSEY = e.clientY;
+});
+document.addEventListener("mouseup", () => {
+  MOUSEDOWN = false;
+});
+document.addEventListener("mousemove", (e) => {
+  if (!MOUSEDOWN) return;
+
+  const dx = -e.clientX + MOUSEX;
+  const dy = -e.clientY + MOUSEY;
+
+  MOUSEX = e.clientX;
+  MOUSEY = e.clientY;
+
+  CAMERA.rotation.y += dx * MOUSE_SENSITIVITY;
+  CAMERA.rotation.x += dy * MOUSE_SENSITIVITY;
+
+});
 const cube = new Mesh(createCubeV(),createCubeF(),MATERIAL);
 initialze(CANVAS_WIDTH,CANVAS_HEIGHT,BG_COLOR) 
 frame()
