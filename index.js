@@ -71,9 +71,7 @@ function faceNormal(face, verts) {
 function isFaceVisible(face, verts) {
   const normal = faceNormal(face, verts);
   const v0 = verts[face[0]];
-  const viewDir = sub(v0, CAMERA.position);
-
-  return dot(normal, viewDir) < 0;
+  return dot(normal, v0) < 0;
 }
 function getFaceDepth(face, verts) {
   let z = 0;
@@ -262,13 +260,13 @@ function checkEvent() {
   const yawRad = CAMERA.rotation.y * DEG2RAD;
 
   const forward = {
-    x: Math.sin(yawRad),
+    x: -Math.sin(yawRad),
     z: Math.cos(yawRad)
   };
 
   const right = {
     x: Math.cos(yawRad),
-    z: -Math.sin(yawRad)
+    z: Math.sin(yawRad)
   };
 
   if (FRONTPRESSED) {
@@ -327,7 +325,10 @@ document.addEventListener("mousemove", (e) => {
   MOUSEY = e.clientY;
 
   CAMERA.rotation.y += dx * MOUSE_SENSITIVITY;
-  CAMERA.rotation.x += dy * MOUSE_SENSITIVITY;
+  CAMERA.rotation.x -= dy * MOUSE_SENSITIVITY;
+
+  if (CAMERA.rotation.x > 90) CAMERA.rotation.x = 90;
+  if (CAMERA.rotation.x < -90) CAMERA.rotation.x = -90;
 
 });
 const cube = new Mesh(createCubeV(),createCubeF(),MATERIAL);
