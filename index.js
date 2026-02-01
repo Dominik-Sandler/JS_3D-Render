@@ -181,6 +181,13 @@ function calculateLight(color,light){
     let r = (Math.floor(parseInt(color.slice(1,3),16) * light)).toString(16)
     let g = (Math.floor(parseInt(color.slice(3,5),16) * light)).toString(16)
     let b = (Math.floor(parseInt(color.slice(5,7),16) * light)).toString(16)
+    if(b == "0"){
+      b = "00"
+    }if(g == "0"){
+      g= "00"
+    }if(r == "0"){
+      r = "00"
+    }
     return "#"+r+g+b
 }
 function renderMesh(mesh, camera) {
@@ -220,6 +227,7 @@ function drawTriangle(projected, tri, material) {
 
   ctx.closePath();
   ctx.fillStyle = calculateLight(material.color,AMBIENTLIGHT.ambientLightStrength);
+  //ctx.strokeStyle = RENDER_COLOR
   ctx.fill();
   ctx.stroke();
 }
@@ -318,7 +326,10 @@ function frame() {
   clear();
   //cube.rotation.y += 0.5;
   //cube.rotation.x += 0.5;
-  renderMesh(cube, CAMERA);
+
+  for(let i = 0; i < WORLD.length; i++){
+    renderMesh(WORLD[i], CAMERA);
+  }
   checkEvent();
   requestAnimationFrame(frame);
 }
@@ -328,9 +339,11 @@ canvas.addEventListener("mousedown", MouseDownHandler);
 document.addEventListener("mouseup", MouseUpHandler);
 document.addEventListener("mousemove", MouseMoveHandler);
 const CAMERA = new Camera();
-const MATERIAL = new Material("#0000FF");
+const MATERIAL = new Material("#00FF00");
 const AMBIENTLIGHT = new AmbientLight(1);
 CAMERA.position.z = -3;
-const cube = new Mesh(createCubeV(),createCubeF(),MATERIAL);
+//const cube = new Mesh(createCubeV(),createCubeF(),MATERIAL);
+var WORLD = new World(10,5).createWorld();
+
 initialze(CANVAS_WIDTH,CANVAS_HEIGHT,BG_COLOR) 
 frame()
