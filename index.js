@@ -190,28 +190,23 @@ function calculateLight(color,light){
     }
     return "#"+r+g+b
 }
-function renderMesh(mesh, camera) {
+function collectMeshTriangles(mesh, camera,renderQueue) {
 
   const worldVerts = meshToWorld(mesh);
   const viewVerts = worldToView(worldVerts, camera);
   const projected = projectVerts(viewVerts);
-  let faces = mesh.triangles
-  .filter(tri => isTriangleInFront(tri, viewVerts))
-  .map(tri => ({
-    tri,
-    depth: getFaceDepth(tri, viewVerts)
-  }));
-
-  if (CULLING) {
-    faces = faces.filter(f =>
-      isFaceVisible(f.tri, viewVerts, camera)
-    );
-  }
-
-  faces.sort((a,b)=>b.depth-a.depth);
   
-  for (let f of faces) {
-    drawTriangle(projected, f.tri, mesh.material);
+  for (let tri of mesh.triangles) {
+
+    if (!isTriangleInFront(tri, viewVerts)) continue;
+    if (CULLING && !isFaceVisible(tri, viewVerts)) continue;
+
+    renderQueue.push({
+      projected,
+      tri,
+      material: mesh.material,
+      depth: getFaceDepth(tri, viewVerts)
+    });
   }
 }
 
@@ -227,7 +222,6 @@ function drawTriangle(projected, tri, material) {
 
   ctx.closePath();
   ctx.fillStyle = calculateLight(material.color,AMBIENTLIGHT.ambientLightStrength);
-  //ctx.strokeStyle = RENDER_COLOR
   ctx.fill();
   ctx.stroke();
 }
@@ -327,8 +321,19 @@ function frame() {
   //cube.rotation.y += 0.5;
   //cube.rotation.x += 0.5;
 
-  for(let i = 0; i < WORLD.length; i++){
-    renderMesh(WORLD[i], CAMERA);
+  const renderQueue = [];
+
+  for (let mesh of WORLD) {
+    collectMeshTriangles(mesh, CAMERA, renderQueue);
+  }
+
+  collectMeshTriangles(cube, CAMERA, renderQueue);
+  collectMeshTriangles(cube1, CAMERA, renderQueue);
+
+  renderQueue.sort((a, b) => b.depth - a.depth);
+
+  for (let r of renderQueue) {
+    drawTriangle(r.projected, r.tri, r.material);
   }
   checkEvent();
   requestAnimationFrame(frame);
@@ -340,9 +345,12 @@ document.addEventListener("mouseup", MouseUpHandler);
 document.addEventListener("mousemove", MouseMoveHandler);
 const CAMERA = new Camera();
 const MATERIAL = new Material("#00FF00");
+const MATERIAL1 = new Material("#0000FF");
 const AMBIENTLIGHT = new AmbientLight(1);
 CAMERA.position.z = -3;
-//const cube = new Mesh(createCubeV(),createCubeF(),MATERIAL);
+const cube = new Mesh(createCubeV(),createCubeF(),MATERIAL);
+const cube1 = new Mesh(createCubeV(),createCubeF(),MATERIAL1);
+cube1.position.x = 1;
 var WORLD = new World(10,5).createWorld();
 
 initialze(CANVAS_WIDTH,CANVAS_HEIGHT,BG_COLOR) 
