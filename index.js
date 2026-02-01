@@ -254,8 +254,34 @@ function keyUpHandler(event) {
     BACKPRESSED = false;
   }
 }
+
+function MouseDownHandler(e){
+  MOUSEDOWN = true;
+  MOUSEX = e.clientX;
+  MOUSEY = e.clientY;
+}
+
+function MouseUpHandler(e){
+  MOUSEDOWN = false;
+}
+
+function MouseMoveHandler(e){
+  if (!MOUSEDOWN) return;
+
+  const dx = -e.clientX + MOUSEX;
+  const dy = -e.clientY + MOUSEY;
+
+  MOUSEX = e.clientX;
+  MOUSEY = e.clientY;
+
+  CAMERA.rotation.y += dx * MOUSE_SENSITIVITY;
+  CAMERA.rotation.x -= dy * MOUSE_SENSITIVITY;
+
+  if (CAMERA.rotation.x > 90) CAMERA.rotation.x = 90;
+  if (CAMERA.rotation.x < -90) CAMERA.rotation.x = -90;
+}
 function checkEvent() {
-  const speed = 0.05;
+  const speed = 0.025;
 
   const yawRad = CAMERA.rotation.y * DEG2RAD;
 
@@ -288,7 +314,6 @@ function checkEvent() {
   if (UPPRESSED) CAMERA.position.y += speed;
   if (DOWNPRESSED) CAMERA.position.y -= speed;
 }
-
 function frame() {
   clear();
   //cube.rotation.y += 0.5;
@@ -297,40 +322,15 @@ function frame() {
   checkEvent();
   requestAnimationFrame(frame);
 }
+document.addEventListener("keydown", keyDownHandler);
+document.addEventListener("keyup", keyUpHandler);
+canvas.addEventListener("mousedown", MouseDownHandler);
+document.addEventListener("mouseup", MouseUpHandler);
+document.addEventListener("mousemove", MouseMoveHandler);
 const CAMERA = new Camera();
-CAMERA.position.z = 0;
 const MATERIAL = new Material("#0000FF");
 const AMBIENTLIGHT = new AmbientLight(1);
 CAMERA.position.z = -3;
-// CAMERA.position.x = 1
-// CAMERA.position.y = 1
-// CAMERA.rotation.y = 15
-document.addEventListener("keydown", keyDownHandler);
-document.addEventListener("keyup", keyUpHandler);
-canvas.addEventListener("mousedown", (e) => {
-  MOUSEDOWN = true;
-  MOUSEX = e.clientX;
-  MOUSEY = e.clientY;
-});
-document.addEventListener("mouseup", () => {
-  MOUSEDOWN = false;
-});
-document.addEventListener("mousemove", (e) => {
-  if (!MOUSEDOWN) return;
-
-  const dx = -e.clientX + MOUSEX;
-  const dy = -e.clientY + MOUSEY;
-
-  MOUSEX = e.clientX;
-  MOUSEY = e.clientY;
-
-  CAMERA.rotation.y += dx * MOUSE_SENSITIVITY;
-  CAMERA.rotation.x -= dy * MOUSE_SENSITIVITY;
-
-  if (CAMERA.rotation.x > 90) CAMERA.rotation.x = 90;
-  if (CAMERA.rotation.x < -90) CAMERA.rotation.x = -90;
-
-});
 const cube = new Mesh(createCubeV(),createCubeF(),MATERIAL);
 initialze(CANVAS_WIDTH,CANVAS_HEIGHT,BG_COLOR) 
 frame()
